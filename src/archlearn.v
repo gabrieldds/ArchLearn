@@ -1,7 +1,8 @@
+`include "parameters.v"
 /*******************************************************************
 *Module name:  archlearn
 *Date Created: 05/08/2019
-*Last Modified: 05/08/2019
+*Last Modified: 27/09/2019
 *Description: Main module to cnn acceleration.
 ********************************************************************/
 module archlearn(
@@ -13,22 +14,26 @@ module archlearn(
     reset
 );
 
-    localparam CONV1_MEM_LENGTH = 2400;
-    localparam CONV2_MEM_LENGTH = 12800;
-    localparam CONV3_MEM_LENGTH = 12800;
-    localparam BIAS1_LENGTH     = 32;
-    localparam BIAS2_LENGTH     = 16;
-    localparam BIAS3_LENGTH     = 32;
-    localparam CONV1OUT_LENGTH  = 32 * 32 * 32;
-    localparam CONV2OUT_LENGTH  = 16 * 16 * 32;
-    localparam CONV3OUT_LENGTH  = 8  * 8  * 32;
-	localparam STRIDE           = 1;
-	localparam PADDING          = 2;
-	
-	localparam [7:0] CONV1_DIM_IMG = 32;
-	localparam [7:0] CONV1_DIM_OUT = 32;
-	localparam [7:0] CONV1_DIM_KERNEL = 5;
-	localparam [7:0] CONV1_DIM_CH     = 3;
+	localparam [`BYTE-1:0] STRIDE           = 1;
+	localparam [`BYTE-1:0] PADDING          = 2;
+
+	localparam [`BYTE-1:0] CONV1_DIM_IMG    = 32;
+	localparam [`BYTE-1:0] CONV1_DIM_CH     = 3;
+	localparam [`BYTE-1:0] CONV1_DIM_KERNEL = 5;
+	localparam [`BYTE-1:0] CONV1_DIM_OUT    = 32;
+	localparam [`BYTE-1:0] CONV1_OUT_CH     = 32;
+
+	localparam [`BYTE-1:0] CONV2_DIM_IMG    = 16;
+	localparam [`BYTE-1:0] CONV2_DIM_CH     = 32;
+	localparam [`BYTE-1:0] CONV2_DIM_KERNEL = 5;
+	localparam [`BYTE-1:0] CONV2_DIM_OUT    = 16;
+	localparam [`BYTE-1:0] CONV2_OUT_CH     = 16;
+
+	localparam [`BYTE-1:0] CONV3_DIM_IMG    = 8;
+	localparam [`BYTE-1:0] CONV3_DIM_CH     = 16;
+	localparam [`BYTE-1:0] CONV3_DIM_KERNEL = 5;
+	localparam [`BYTE-1:0] CONV3_DIM_OUT    = 8;
+	localparam [`BYTE-1:0] CONV3_OUT_CH     = 32;
 
 	input clk;
 	input mosi;
@@ -37,17 +42,17 @@ module archlearn(
 	input sclk;
 	input reset;
 	
-	reg [7:0] mem_conv1   [0:CONV1_MEM_LENGTH];
-	reg [7:0] mem_conv2   [0:CONV2_MEM_LENGTH];
-	reg [7:0] mem_conv3   [0:CONV3_MEM_LENGTH];
-	reg [7:0] mem_bias1   [0:BIAS1_LENGTH];
-	reg [7:0] mem_bias2   [0:BIAS2_LENGTH];
-	reg [7:0] mem_bias3   [0:BIAS3_LENGTH];
-	reg [7:0] mem_convout [0:CONV1OUT_LENGTH];
-	reg [7:0] mem_input   [0:3072];
+	reg [`BYTE-1:0] mem_conv1   [0:`CONV1_MEM_LENGTH-1];
+	reg [`BYTE-1:0] mem_conv2   [0:`CONV2_MEM_LENGTH-1];
+	reg [`BYTE-1:0] mem_conv3   [0:`CONV3_MEM_LENGTH-1];
+	reg [`BYTE-1:0] mem_bias1   [0:`BIAS1_LENGTH-1];
+	reg [`BYTE-1:0] mem_bias2   [0:`BIAS2_LENGTH-1];
+	reg [`BYTE-1:0] mem_bias3   [0:`BIAS3_LENGTH-1];
+	reg [`BYTE-1:0] mem_convout [0:`CONV1OUT_LENGTH-1];
+	reg [`BYTE-1:0] mem_input   [0:`CONV2OUT_LENGTH-1];
 
-	reg [7:0] source_data;
-	reg [7:0] sink_data;
+	reg [`BYTE-1:0] source_data;
+	reg [`BYTE-1:0] sink_data;
 	reg sink_valid;
 	reg source_ready;
 
@@ -59,10 +64,9 @@ module archlearn(
 	
 	assign nreset = reset;
 	
-	pll clk0(clk, clk_spi);
-	pll clk1(clk, clk, clk_conv);
+	pll clk0(clk, clk_conv, clk_spi);
 
-	spi_slave spi4(
+	spi spi4(
 		.sysclk(clk_spi),
 		.nreset(nreset),
 		.mosi(mosi),
@@ -76,177 +80,143 @@ module archlearn(
 		.stsinkdata    (sink_data),    //                        .data
 		.stsinkready   (sink_ready)    //                        .ready out
 	);
+
+	reg signed [`WORD-1:0] temp, temp2, temp3;
 	
 	always@(posedge clk_spi)
 	begin
-		//sink_data <= source_data;
-		led <= source_data;		
+		if(reset) begin
+			temp <= 0;
+			temp2 <= 0;
+			temp3 <= 0;
+		end
+		//sink_data <= source_data;	
 		source_ready <= sink_ready;
-		sink_valid <= enable_sink;
-		sink_data <= mem_convout[wTM];
+		//sink_valid <= enable_sink;
+		//sink_data <= mem_convout[wTM];
 		//sink_valid <= source_valid;
 	end
 
-	wire [10:0] en_ctrl;
-	wire w_finished;
-	wire r_finished;
-	wire [15:0] counter_mem;
+	wire [`CTRL_SIZE-1:0] en_ctrl;
+	wire [15:0] w_addr;
 	wire [2:0] convin;
+	wire [`BYTE-1:0] data_out;
 
     controller control(
 		.clk(clk_spi),
 		.reset(reset),
+		.valid(source_valid),
+		.data_in(source_data),
+		.data_out(data_out),
 		.convin(convin),
 		.en_ctrl(en_ctrl),
-		.address_written(counter_mem)
+		.address_written(w_addr)
     );
+
+	always @(posedge clk_spi) begin
+		if(en_ctrl[0]) begin
+			mem_conv1[w_addr] <= data_out;
+		end else if(en_ctrl[1]) begin
+			mem_bias1[w_addr] <= data_out;
+		end else if(en_ctrl[2]) begin
+			mem_conv2[w_addr] <= data_out;
+		end else if(en_ctrl[3]) begin
+			mem_bias2[w_addr] <= data_out;
+		end else if(en_ctrl[4]) begin
+			mem_conv3[w_addr] <= data_out;
+		end else if(en_ctrl[5]) begin
+			mem_bias3[w_addr] <= data_out;
+		end else if(en_ctrl[6]) begin
+			mem_input[w_addr] <= data_out;
+		end
+	end
+
 	/**************************Convolution*************************************/
 
-	reg [7:0] i //counter_convout;
-	reg [7:0] j //counter_img_dimX;
-	reg [7:0] k //counter_img_dimY;
-	reg [7:0] l //counter_img_ch;
-	reg [7:0] m //counter_kernel_dimX;
-	reg [7:0] n //counter_kernel_dimY;
+	wire [`BYTE-1:0] i, i2, i3; //counter_convout;
+	wire [`BYTE-1:0] j, j2, j3; //counter_img_dimX;
+	wire [`BYTE-1:0] k, k2, k3; //counter_img_dimY;
+	wire [`BYTE-1:0] m, m2, m3; //counter_kernel_dimX;
+	wire [`BYTE-1:0] n, n2, n3; //counter_kernel_dimY;
 
-	signed [15:0] reg convout;
-	signed [15:0] reg bias_r;
-	signed [7:0]  reg in_row, in_col;
+	wire signed [`WORD-1:0] convout, convout2, convout3;
+	reg signed [`HALF_WORD-1:0] bias_r, bias_r2, bias_r3;
+	wire signed [`BYTE-1:0] in_row, in_row2, in_row3;
+	wire signed [`BYTE-1:0] in_col, in_col2, in_col3;
 
-	reg enable_counter_imgJ;
-	reg enable_counter_imgK;
-	reg enable_counter_img_ch;
-	reg enable_counter_kernel_dimN;
-	reg enable_counter_kernel_dimY;
-	reg enable_counter_convout;
+	reg [15:0] mem_conv1_addr[0:CONV1_DIM_CH-1];
+	reg [15:0] mem_conv2_addr[0:CONV2_DIM_CH-1];
+	reg [15:0] mem_conv3_addr[0:CONV3_DIM_CH-1];
 
-	wire counterLis3;
-	wire counterNis5;
-	wire counterMis5;
-	wire counterKis32;
-	wire counterJis32;
-	wire counterIis32;
+	reg [15:0] mem_img1_addr [0:CONV1_DIM_CH-1];
+	reg [15:0] mem_img2_addr [0:CONV2_DIM_CH-1];
+	reg [15:0] mem_img3_addr [0:CONV3_DIM_CH-1];
 
-	assign enable_counter_img_ch = in_row >= 8'd0 && in_col >= 8'd0 && in_rol < CONV1_DIM_IMG && in_col < CONV1_DIM_IMG;
-	assign enable_counter_kernel_dimN = (~en_ctrl[8] & counterLis3) | (~enable_counter_img_ch & en_ctrl[8]);
-	assign enable_counter_kernel_dimM = en_ctrl[8] & counterNis5;
-	assign enable_counter_imgK = en_ctrl[8] & counterMis5;
-	assign enable_counter_imgJ = en_ctrl[8] & counterKis32;
-	assign enable_counter_convout = en_ctrl[8] & counterJis32;
-
-	assign counterLis3  = (l == CONV1_DIM_CH) ? 1 : 0;
-	assign counterNis5  = (n == CONV1_DIM_KERNEL) ? 1 : 0;
-	assign counterMis5  = (m == CONV1_DIM_KERNEL) ? 1 : 0;
-	assign counterKis32 = (k == CONV1_DIM_IMG) ? 1 : 0;
-	assign counterJis32 = (j == CONV1_DIM_IMG) ? 1 : 0;
-	assign counterIis32 = (i == CONV1_DIM_OUT) ? 1 : 0; 
-
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_CH)
-	) forL (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(en_ctrl[8] && enable_counter_img_ch),
-		.counter(l)
+	wire [15:0] save_addr;
+	/********** CONV1 *********************/
+	conv_control#(
+		.CONV_IM_DIM(CONV1_DIM_IMG),
+		.CONV_DIM_KERNEL(CONV1_DIM_KERNEL),
+		.CONV_DIM_OUT(CONV1_DIM_OUT),
+		.CONV_OUT_CH(CONV1_OUT_CH),
+		.STRIDE(STRIDE),
+		.PADDING(PADDING)	
+	) ctrl_c1 (
+		clk, 
+		en_ctrl[7], 
+		reset, 
+		i, 
+		j, 
+		k, 
+		m, 
+		n, 
+		convin[0], 
+		in_row, 
+		in_col
 	);
 
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_KERNEL)
-	) forN (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_counter_kernel_dimN),
-		.counter(n)
-	);
-
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_KERNEL)
-	) forM (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_counter_kernel_dimM),
-		.counter(m)
-	);
-
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_IMG)
-	) forK (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_counter_imgK),
-		.counter(k)
-	);
-
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_IMG)
-	) forJ (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_counter_imgJ),
-		.counter(j)
-	);
-
-	counter#(
-		.COUNTER_WIDTH(8),
-		.COUNTER_RESET_VALUE(CONV1_DIM_OUT)
-	) forI (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_counter_convout),
-		.counter(i)
-	);
-
-
-	always @(posedge clk_conv) begin
-		if(en_ctrl[8] && enable_counter_img_ch) begin
-			convout <= convout + mem_input[(in_row * CONV1_DIM_IMG + in_col) * CONV1_DIM_CH + l] * mem_conv1[i * 
-			CONV1_DIM_CH * CONV1_DIM_KERNEL * CONV1_DIM_KERNEL + (m * CONV1_DIM_KERNEL + n) * CONV1_DIM_CH + l];
+	/*always @(en_ctrl[7],n,m,temp) begin
+		if(en_ctrl[7] && n == 0 && m == 0) begin
+			temp = 0;
+		end
+	end*/
+	
+	always @(en_ctrl[7], k, bias_r) begin
+		if(en_ctrl[7] && k >= 0 && k < CONV1_DIM_IMG) begin
+			bias_r = $signed(mem_bias1[i]) << 6;
 		end
 	end
 
-	always @(posedge clk_conv) begin
-		if(k == 0 || enable_counter_imgK) begin
-			bias_r <= mem_bias1[i] >> 6 + 9;
+	integer c, l;
+	always @(i, j, k, m, n) begin
+        for (l = 0; l < CONV1_DIM_CH; l=l+1) begin
+			if(en_ctrl[7]) begin
+				mem_img1_addr[l] = (((((STRIDE * j) + m - PADDING) * CONV1_DIM_IMG) + ((STRIDE * k) + n - PADDING)) * CONV1_DIM_CH) + l;
+				mem_conv1_addr[l] = (i * CONV1_DIM_CH * CONV1_DIM_KERNEL * CONV1_DIM_KERNEL) + (((m * CONV1_DIM_KERNEL) + (n)) * CONV1_DIM_CH) + l;
+			end
+		end
+    end
+
+	always @(en_ctrl[7], in_row, in_col, temp) begin
+		for(c = 0; c < CONV1_DIM_CH; c=c+1) begin
+			if(en_ctrl[7] && in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV1_DIM_IMG && in_col < CONV1_DIM_IMG) begin
+				temp = temp + ($signed(mem_conv1[mem_conv1_addr[c]]) * $signed({1'b0, mem_input[mem_img1_addr[c]]}));
+			end
 		end
 	end
 
-	always @(posedge clk_conv) begin
-		if(n == 0 || enable_counter_kernel_dimN) begin
-			in_row <= STRIDE * j + m - PADDING;
-            in_col <= STRIDE * k + n - PADDING;
+	assign convout = temp;
+
+	always @(posedge clk) begin
+		if(en_ctrl[7] && n == 4 && m == 4) begin
+			if (((convout + bias_r) >>> 9) > 127) begin
+				mem_convout[save_addr] <= 127;
+			end else if(((convout + bias_r) >>> 9) < -128) begin
+				mem_convout[save_addr] <= -128;
+			end else begin
+				mem_convout[save_addr] <= (convout + bias_r) >>> 9;
+			end
 		end
 	end
-
-	always @(posedge clk_conv) begin
-		if(counterMis5) begin
-			mem_convout[i + (j * CONV1_DIM_IMG + k) * CONV1_DIM_OUT] <= convout;
-		end
-	end
-
-	assign convin = (counterIis32) ? 3'b001 : 3'b000;
-
-	wire [7:0] i_backup;
-	assign i_backup  = (counterIis32) ? i : 0;
-	wire enable_read = (i_backup == CONV1_DIM_OUT) ? 1 : 0;
-
-	wire [11:0] wTM;
-
-	counter#(
-		.COUNTER_WIDTH(12),
-		.COUNTER_RESET_VALUE(CONV1OUT_LENGTH)
-	) writeToMicrocontroller (
-		.clk(clk_conv),
-		.reset(reset),
-		.enable(enable_read),
-		.counter(wTM)
-	);
-
-	wire enable_sink = (wTM == CONV1OUT_LENGTH) ? 0 : 1;
-	assign i_backup (enable_sink) ? 0 : i_backup;
-
+	
 endmodule
