@@ -7,13 +7,13 @@ module sig_altmult_accum
 );
 
 	// Declare registers and wires
-	reg  signed [8:0] dataa_reg, datab_reg;
+	//reg  signed [8:0] dataa_reg, datab_reg;
 	reg  sload_reg;
 	reg	 signed [18:0] old_result;
-	wire signed [17:0] multa;
+	reg  signed [17:0] multa;
 	
 	// Store the results of the operations on the current data
-	assign multa = dataa * datab;
+	//assign multa = dataa * datab;
 	
 	// Store the value of the accumulation (or clear it)
 	always @ (adder_out, sload_reg)
@@ -40,6 +40,7 @@ module sig_altmult_accum
 			//dataa_reg <= dataa;
 			//datab_reg <= datab;
 			sload_reg <= sload;
+			multa <= dataa * datab;
 			adder_out <= old_result + multa;
 		end
 	end

@@ -46,9 +46,9 @@ module conv_testb;
     end
     
 	initial begin
-		$readmemh("conv_data.mem", mem_conv1);
-		$readmemh("img_data.mem", mem_input);
-		$readmemh("bias_data.mem", mem_bias1);
+		$readmemh("mem_files/conv_data.mem", mem_conv1);
+		$readmemh("mem_files/img_data.mem", mem_input);
+		$readmemh("mem_files/bias_data.mem", mem_bias1);
 	end
 
 	reg signed [19:0] temp;

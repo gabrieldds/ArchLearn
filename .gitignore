@@ -1,2 +1,4 @@
 /simulation
 /synthesis
+/testbenches/transcript
+/src/*.bak
