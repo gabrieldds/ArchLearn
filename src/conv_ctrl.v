@@ -11,9 +11,9 @@ module conv_ctrl(
     finish
 );
     parameter [`BYTE-1:0] CONV_DIM_IMG    = 32;
-	parameter [`BYTE-1:0] CONV_DIM_OUT    = 32;   //dimension of output img
-	parameter [`BYTE-1:0] CONV_DIM_KERNEL = 5; //dimension of kernel mask
-	parameter [`BYTE-1:0] CONV_DIM_CH     = 3; //dimension of input channel
+    parameter [`BYTE-1:0] CONV_DIM_OUT    = 32;   //dimension of output img
+    parameter [`BYTE-1:0] CONV_DIM_KERNEL = 5; //dimension of kernel mask
+    parameter [`BYTE-1:0] CONV_DIM_CH     = 3; //dimension of input channel
     parameter [`BYTE-1:0] CONV_OUT_CH     = 32; //dimension of output channel
     parameter [`BYTE-1:0] STRIDE          = 1;  //stride len
     parameter [`BYTE-1:0] PADDING         = 2;  // padding len
