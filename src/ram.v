@@ -3,7 +3,8 @@ module ram (
     input [15:0] address,
     input [7:0] data_in, 
     input write_enable,
-    output [7:0] data_out
+    input read_enable,
+    output reg [7:0] data_out
 );
     parameter MEM_LENGTH = 255;
 
@@ -13,8 +14,10 @@ module ram (
         if (write_enable) begin
             memory[address] <= data_in;
         end
-    end
 
-    assign data_out = memory[address];
+        if(read_enable) begin
+            data_out <= memory[address];
+        end
+    end
 
 endmodule

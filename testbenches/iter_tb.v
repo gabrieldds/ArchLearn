@@ -1,8 +1,8 @@
-module convctrl_tb;
+module iter_tb;
 
     localparam period = 20;
     reg clk, reset, en_ctrl;
-    wire finish;
+    wire en_sum, finish;
     wire signed [7:0] in_row, in_col;
 
     always begin
@@ -17,7 +17,7 @@ module convctrl_tb;
     #period
     reset = 0;
     #period
-        en_ctrl = 1;
+    en_ctrl = 1;
     end
 
     always @(posedge clk) begin
@@ -33,6 +33,6 @@ module convctrl_tb;
 	wire [7:0] n; //counter_kernel_dimY;
     wire [1:0] l;
 
-    conv_control ctrl(clk, en_ctrl, reset, i, j, k, m, n, l, finish, in_row, in_col);
+    iterator iter(clk, en_ctrl, reset, i, j, k, l, m, n, en_sum, finish, in_row, in_col);
 
 endmodule
