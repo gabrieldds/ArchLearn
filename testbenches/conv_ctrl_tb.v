@@ -1,8 +1,8 @@
 module conv_ctrl_tb;
 
 reg clk, reset, en_ctrl, enclk;
-wire en_sum, finish;
-wire [15:0] s_addr, w_addr;
+wire en_sum, finish, save;
+wire [15:0] s_addr, w_addr, b_addr, save_addr;
 
 localparam CLK_PERIOD = 20;
 always #(CLK_PERIOD/2) clk=~clk;
@@ -27,6 +27,6 @@ always @(posedge clk) begin
     end
 end
 
-conv_ctrl groundctrl (clk, reset, en_ctrl, s_addr, w_addr, en_sum, finish);
+conv_ctrl groundctrl (clk, reset, en_ctrl, s_addr, w_addr, b_addr, save_addr, en_sum, save, finish);
 
 endmodule

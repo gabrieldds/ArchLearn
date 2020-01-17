@@ -33,7 +33,7 @@ module conv_testb;
 	reg [7:0] mem_input   [0:3072];
 
 	wire signed [16:0] convout;
-	reg signed [16:0] bias_r;
+	reg signed  [16:0] bias_r;
 	wire signed [7:0]  in_row, in_col;
 
     wire counterIis32;

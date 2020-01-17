@@ -2,7 +2,7 @@ module iter_tb;
 
     localparam period = 20;
     reg clk, reset, en_ctrl;
-    wire en_sum, finish;
+    wire en_sum, save, finish;
     wire signed [7:0] in_row, in_col;
 
     always begin
@@ -33,6 +33,6 @@ module iter_tb;
 	wire [7:0] n; //counter_kernel_dimY;
     wire [1:0] l;
 
-    iterator iter(clk, en_ctrl, reset, i, j, k, l, m, n, en_sum, finish, in_row, in_col);
+    iterator iter(clk, en_ctrl, reset, i, j, k, l, m, n, en_sum, save, finish, in_row, in_col);
 
 endmodule

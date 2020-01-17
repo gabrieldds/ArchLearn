@@ -12,6 +12,7 @@ module iterator(
 	m, 
 	n,
 	en_sum,
+	save,
 	finish,
 	in_row,
 	in_col
@@ -35,7 +36,7 @@ module iterator(
 	input en_ctrl;
 	input reset;
 
-	output en_sum;
+	output en_sum, save;
 	output reg finish;
 	output reg [`BYTE-1:0] i; //counter_convout;
 	output reg [`BYTE-1:0] j; //counter_img_dimX;
@@ -52,6 +53,7 @@ module iterator(
 	assign in_col = (STRIDE * k) + n - PADDING;
 	assign cond   = en_ctrl & ~finish;
 	assign en_sum = (en_ctrl && (l < 2'd3) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
+	assign save   = (n == 4 && m == 4) ? 1 : 0; 
 	/*
 	always @(posedge clk) begin
 		if (reset) begin
@@ -140,8 +142,7 @@ module iterator(
 		end else if(cond) begin
 		    if(en_sum) begin
 				l <= l + 8'd1;
-			end
-			else begin
+			end else begin
 				l <= 0;
 				n <= n + 8'd1;
 				if(n == (CONV_DIM_KERNEL-1)) begin
