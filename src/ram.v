@@ -7,8 +7,15 @@ module ram (
     output reg [7:0] data_out
 );
     parameter MEM_LENGTH = 255;
+    parameter MEM_INIT_FILE = "";
 
     reg [7:0] memory [0:MEM_LENGTH];
+
+    initial begin
+        if (MEM_INIT_FILE != "") begin
+            $readmemh(MEM_INIT_FILE, memory);
+        end
+    end
 
     always @(posedge clk) begin
         if (write_enable) begin

@@ -2,20 +2,19 @@ module convolve(
     clk,
     reset,
     clken,
-    sload,
-    save,
+    s_convout,
+    en_sat,
+    en_mult_r,
     bias,
     signal,
     weight,
-    s_convout,
-    convout,
+    convout
 );
 
-    input  clk, reset, clken, sload, save;
+    input  clk, reset, clken, s_convout, en_sat, en_mult_r;
     input  [7:0] signal, weight;
     input  [7:0] bias;
-    output reg signed [7:0] convout;
-    output reg s_convout;
+    output wire signed [7:0] convout;
 
     wire signed [17:0] adder_out;
     reg signed  [17:0] r_bias;
@@ -24,37 +23,39 @@ module convolve(
 
     sig_altmult_accum mac(
         .clk(clk),
-        .aclr(reset),
+        .aclr(reset | s_convout),
         .clken(clken),
-        .sload(sload),
+        .sload(s_convout),
         .dataa(signal),
         .datab(weight),
         .adder_out(adder_out)
     );
 
+    reg signed [17:0] multa_r;
+    wire signed [17:0] multa_w;
+
+    always @(posedge clk) begin
+        if(en_mult_r) begin
+            if (clken && s_convout) begin
+                multa_r <= $signed({1'b0, signal}) * $signed(weight);
+            end
+        end else begin
+            multa_r <= 0;
+        end
+    end
+
     always @(posedge clk) begin
         if(reset) begin
-            save_r    <= 0;
             r_bias    <= 0;
             conv_temp <= 0;
-        end else begin
-            save_r <= save;
+            multa_r   <= 0;
+        end else if(en_sat) begin
             r_bias <= $signed(bias) <<< 6;
-            conv_temp <= (adder_out + r_bias) >>> 9;
+            conv_temp <= (adder_out + multa_r + ($signed(bias) <<< 6)) >>> 9;
         end
     end
 
-    always @(posedge clk) begin
-        if(save_r) begin
-            if (conv_temp > 18'd127) begin
-                convout <= 8'd127;
-            end else if(conv_temp < -18'd128) begin
-                convout <= -8'd128;
-            end else begin
-                convout <= conv_temp[7:0];
-            end
-        end
-    end
-
+    assign convout = (en_sat && conv_temp >  18'd127) ?  8'd127  :
+                     (en_sat && conv_temp < -18'd128) ? -8'd128  : conv_temp[7:0];
 
 endmodule

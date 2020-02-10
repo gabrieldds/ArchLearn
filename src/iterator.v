@@ -12,7 +12,7 @@ module iterator(
 	m, 
 	n,
 	en_sum,
-	save,
+	en_save,
 	finish,
 	in_row,
 	in_col
@@ -36,7 +36,8 @@ module iterator(
 	input en_ctrl;
 	input reset;
 
-	output en_sum, save;
+	output en_sum;
+	output reg en_save;
 	output reg finish;
 	output reg [`BYTE-1:0] i; //counter_convout;
 	output reg [`BYTE-1:0] j; //counter_img_dimX;
@@ -53,83 +54,17 @@ module iterator(
 	assign in_col = (STRIDE * k) + n - PADDING;
 	assign cond   = en_ctrl & ~finish;
 	assign en_sum = (en_ctrl && (l < 2'd3) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
-	assign save   = (n == 4 && m == 4) ? 1 : 0; 
-	/*
-	always @(posedge clk) begin
-		if (reset) begin
-			i <= 0;
-			j <= 0;
-			k <= 0;
-			m <= 0;
-			n <= 0;
-			finish <= 0;
-			state <= NINC;
+	//assign en_save  = (j < 8'd2 && k < 8'd2) ? (n == 0 && m == 0) : (n == 0 && m == 0 && l == 0) ? 1 : 0;
+
+	always @(j, k, l, m, n, en_save) begin
+		if (j < 8'd2 && m == 0 && n == 0) begin
+			en_save <= 1;
+		end else if(j >= 8'd2 && m == 0 && n == 0 && l == 0) begin
+			en_save <= 1;
 		end else begin
-			case(state)
-				START: begin
-					if(cond) begin
-						state <= LINC;
-					end else begin
-						state <= START;
-					end
-				end
-				NINC: begin
-					if (n < (CONV_DIM_KERNEL-1) && !en_sum) begin
-						l <= 8'd0;
-						n <= n + 8'd1;
-						state <= LINC;
-					end else begin
-						state <= MINC;
-					end
-				end
-				LINC: begin
-					if ((l < 2'd3) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) begin
-						l <= l + 8'd1;
-						state <= LINC;
-					end else begin
-						state <= NINC;
-					end
-				end
-				MINC: begin
-					if (m < (CONV_DIM_KERNEL-1)) begin
-						n <= 8'd0;
-						m <= m + 8'd1;
-						state <= NINC;
-					end else begin
-						state <= KINC;
-					end
-				end
-				KINC: begin
-					if (k < (CONV_DIM_OUT-1)) begin
-						m <= 8'd0;
-						k <= k + 8'd1;
-						state <= MINC;
-					end else begin
-						state <= JINC;
-					end
-				end
-				JINC: begin
-					if (j < (CONV_DIM_OUT-1)) begin
-						k <= 8'd0;
-						j <= j + 8'd1;
-						state <= KINC;
-					end else begin
-						state <= IINC;
-					end
-				end
-				IINC: begin
-					if (i < (CONV_OUT_CH-1)) begin
-						j <= 8'd0;
-						i <= i + 8'd1;
-						state <= NINC;
-					end else begin
-						state <= START;
-						finish <= 1;
-					end
-				end
-			endcase
-		end	
-	end*/
+			en_save <= 0;
+		end
+	end
 	
 	always @(posedge clk) begin
 		if (reset) begin
@@ -148,13 +83,13 @@ module iterator(
 				if(n == (CONV_DIM_KERNEL-1)) begin
 			    	n <= 8'b0;
 			    	m <= m + 8'b1;
-			    	if (m == (CONV_DIM_KERNEL-1)) begin
+			    	if(m == (CONV_DIM_KERNEL-1)) begin
 			    		m <= 0;
 			       		k <= k + 8'b1;
 			       		if(k == (CONV_DIM_OUT-1)) begin
 			           		k <= 0;
 			           		j <= j + 8'b1;
-			           		if (j == (CONV_DIM_OUT-1)) begin
+			           		if(j == (CONV_DIM_OUT-1)) begin
 				           		j <= 0;
 				           		i <= i + 8'b1;
 				           		if(i == (CONV_OUT_CH-1)) begin

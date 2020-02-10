@@ -4,6 +4,7 @@ module addr_generator(
     clk,
     reset,
     enable,
+    en_save,
     i,
     j,
     k,
@@ -27,6 +28,7 @@ module addr_generator(
     input clk;
     input reset;
     input enable;
+    input en_save;
     input [`BYTE-1:0] i;
     input [`BYTE-1:0] j;
     input [`BYTE-1:0] k;
@@ -45,13 +47,46 @@ module addr_generator(
         if(reset) begin
             s_addr <= 0;
             w_addr <= 0;
-            save_addr <= 0;
+            //save_addr <= 0;
             b_addr <= 0;
         end else if(enable) begin
             s_addr <= (((((STRIDE * j) + m - PADDING) * CONV_DIM_IMG) + ((STRIDE * k) + n - PADDING)) * CONV_DIM_CH) + l;
             w_addr <= (i * CONV_DIM_CH * CONV_DIM_KERNEL * CONV_DIM_KERNEL) + (((m * CONV_DIM_KERNEL) + (n)) * CONV_DIM_CH) + l;
-            save_addr <= i + (((j * CONV_DIM_OUT) + k) * CONV_OUT_CH);
+            //save_addr <= i + (((j * CONV_DIM_OUT) + k) * CONV_OUT_CH);
             b_addr <= i;
+        end
+    end
+
+    reg [7:0] i_r, j_r, k_r;
+    reg [7:0] i_r1, j_r1, k_r1;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            i_r <= 0;
+            j_r <= 0;
+            k_r <= 0;
+            i_r1 <= 0;
+            j_r1 <= 0;
+            k_r1 <= 0;
+        end else begin
+            i_r  <= i;
+            i_r1 <= i_r;
+            j_r <= j;
+            j_r1 <= j_r;
+            k_r <= k;
+            k_r1 <= k_r;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (reset) begin
+            save_addr <= 0;
+        end else if(en_save) begin
+            if (j == 0 && k == 0) begin
+                save_addr <= i_r1 + (((j_r1 * CONV_DIM_OUT) + (k_r1)) * CONV_OUT_CH);
+            end else begin
+                save_addr <= i + (((j * CONV_DIM_OUT) + (k[4:0]-1)) * CONV_OUT_CH); 
+            end
         end
     end
 endmodule  
