@@ -13,7 +13,7 @@ module iterator(
 	n,
 	en_sum,
 	en_save,
-	finish,
+	fin_r,
 	in_row,
 	in_col
 );
@@ -38,7 +38,7 @@ module iterator(
 
 	output en_sum;
 	output reg en_save;
-	output reg finish;
+	output reg fin_r;
 	output reg [`BYTE-1:0] i; //counter_convout;
 	output reg [`BYTE-1:0] j; //counter_img_dimX;
 	output reg [`BYTE-1:0] k; //counter_img_dimY;
@@ -47,12 +47,12 @@ module iterator(
 	output reg [`BYTE-1:0] l; //counter_kernel_dimY;
 	output signed [`BYTE-1:0]  in_row, in_col;
 
-	reg [3:0] state;
+	reg fin, finish;
 	
 	wire cond;
 	assign in_row = (STRIDE * j) + m - PADDING;
 	assign in_col = (STRIDE * k) + n - PADDING;
-	assign cond   = en_ctrl & ~finish;
+	assign cond   = en_ctrl & ~fin_r;
 	assign en_sum = (en_ctrl && (l < 2'd3) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
 	//assign en_save  = (j < 8'd2 && k < 8'd2) ? (n == 0 && m == 0) : (n == 0 && m == 0 && l == 0) ? 1 : 0;
 
@@ -63,6 +63,16 @@ module iterator(
 			en_save <= 1;
 		end else begin
 			en_save <= 0;
+		end
+	end
+
+	always @(posedge clk) begin
+		if(reset) begin
+			fin <= 0;
+			fin_r <= 0;
+		end else begin
+			fin <= finish;
+			fin_r <= fin;
 		end
 	end
 	

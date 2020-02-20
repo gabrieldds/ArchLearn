@@ -8,9 +8,9 @@
 `define CONV2OUT_LENGTH   16 * 16 * 32
 `define CONV3OUT_LENGTH   8  * 8  * 32
 `define INPUT_LENGTH      32 * 32 * 3
-`define IMG_DATA          "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/img_data.mem"
-`define CONV_DATA         "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/conv_data.mem"
-`define BIAS_DATA         "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/bias_data.mem"
+`define IMG_DATA          "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/debug_input1.mem"
+`define CONV_DATA         "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/conv1_wt.mem"
+`define BIAS_DATA         "C:/Users/gabri/Documents/Projetos/ArchLearn/testbenches/mem_files/conv1_bias.mem"
 
 module archlearn_tb;
 
@@ -43,8 +43,17 @@ module archlearn_tb;
         run_clock;
     end
 
+    reg fin_reg;
+
     always @(posedge clk) begin
-        if (finish) begin
+        if(reset) begin
+            fin_reg <= 0;
+        end else begin
+            fin_reg <= finish;
+        end
+
+        if (fin_reg) begin
+            en_ctrl <= 0;
             $stop;
         end
     end

@@ -37,7 +37,7 @@ module convolve(
     always @(posedge clk) begin
         if(en_mult_r) begin
             if (clken && s_convout) begin
-                multa_r <= $signed({1'b0, signal}) * $signed(weight);
+                multa_r <= $signed(signal) * $signed(weight);
             end
         end else begin
             multa_r <= 0;

@@ -24,6 +24,7 @@ module addr_generator(
     parameter [`BYTE-1:0] CONV_DIM_OUT    = 32;
     parameter [`BYTE-1:0] STRIDE          = 1;
     parameter [`BYTE-1:0] PADDING         = 2;
+    parameter [`BYTE-1:0] KSIZE           = 4;
 
     input clk;
     input reset;
@@ -40,19 +41,14 @@ module addr_generator(
     output reg [`HALF_WORD-1:0] save_addr;
     output reg [`HALF_WORD-1:0] b_addr;
 
-	//assign s_addr = (enable) ? (((((STRIDE * j) + m - PADDING) * CONV_DIM_IMG) + ((STRIDE * k) + n - PADDING)) * CONV_DIM_CH) + l : 0;
-	//assign w_addr = (enable) ? (i * CONV_DIM_CH * CONV_DIM_KERNEL * CONV_DIM_KERNEL) + (((m * CONV_DIM_KERNEL) + (n)) * CONV_DIM_CH) + l : 0;
-
     always @(posedge clk) begin
         if(reset) begin
             s_addr <= 0;
             w_addr <= 0;
-            //save_addr <= 0;
             b_addr <= 0;
         end else if(enable) begin
             s_addr <= (((((STRIDE * j) + m - PADDING) * CONV_DIM_IMG) + ((STRIDE * k) + n - PADDING)) * CONV_DIM_CH) + l;
             w_addr <= (i * CONV_DIM_CH * CONV_DIM_KERNEL * CONV_DIM_KERNEL) + (((m * CONV_DIM_KERNEL) + (n)) * CONV_DIM_CH) + l;
-            //save_addr <= i + (((j * CONV_DIM_OUT) + k) * CONV_OUT_CH);
             b_addr <= i;
         end
     end
@@ -85,7 +81,7 @@ module addr_generator(
             if (j == 0 && k == 0) begin
                 save_addr <= i_r1 + (((j_r1 * CONV_DIM_OUT) + (k_r1)) * CONV_OUT_CH);
             end else begin
-                save_addr <= i + (((j * CONV_DIM_OUT) + (k[4:0]-1)) * CONV_OUT_CH); 
+                save_addr <= i + (((j * CONV_DIM_OUT) + (k[KSIZE:0]-1)) * CONV_OUT_CH);
             end
         end
     end

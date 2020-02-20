@@ -7,16 +7,13 @@ module sig_altmult_accum
 );
 
 	// Declare registers and wires
-	//reg signed [7:0] datab_reg;
-	//reg signed [8:0] dataa_reg;
-	reg	signed [16:0] old_result;
+	reg	signed [17:0] old_result;
 	reg signed [17:0] accum_out;
 	wire signed [17:0] multa;
 	reg sload_reg;
 	
 	// Store the results of the operations on the current data
-	//assign multa = dataa_reg * datab_reg;
-	assign multa = $signed({1'b0, dataa}) * $signed(datab);
+	assign multa = $signed(dataa) * $signed(datab);
 	
 	// Store the value of the accumulation (or clear it)
 	always @ (accum_out, sload_reg)

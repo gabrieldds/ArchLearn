@@ -25,6 +25,7 @@ module conv_ctrl(
     parameter [`BYTE-1:0] CONV_OUT_CH     = 32;  //dimension of output channel
     parameter [`BYTE-1:0] STRIDE          = 1;   //stride len
     parameter [`BYTE-1:0] PADDING         = 2;   // padding len
+    parameter [`BYTE-1:0] KSIZE           = 4;
 
     localparam [2:0] START     = 0;
     localparam [2:0] ITERATING = 1;
@@ -48,7 +49,7 @@ module conv_ctrl(
     reg en_sum_r;
     reg [2:0] state;
 
-    always @(posedge clk) begin
+    /*always @(posedge clk) begin
         if (reset) begin
             state <= 0;
         end else begin
@@ -85,7 +86,7 @@ module conv_ctrl(
                 end
             endcase
         end
-    end
+    end*/
 
     always @(posedge clk) begin
         if (reset) begin
@@ -135,7 +136,7 @@ module conv_ctrl(
     ) iter (
         .clk(clk),
         .reset(reset),
-        .en_ctrl(en_ctrl_r),
+        .en_ctrl(en_ctrl),
         .i(i),
         .j(j),
         .k(k),
@@ -144,7 +145,7 @@ module conv_ctrl(
         .n(n),
         .en_sum(en_sum),
         .en_save(en_save),    
-        .finish(finish),
+        .fin_r(finish),
         .in_row(in_row),
         .in_col(in_col)
     );
@@ -156,7 +157,8 @@ module conv_ctrl(
         .CONV_DIM_OUT(CONV_DIM_OUT),
         .CONV_OUT_CH(CONV_OUT_CH),
         .STRIDE(STRIDE),
-        .PADDING(PADDING)
+        .PADDING(PADDING),
+        .KSIZE(KSIZE)
     ) address_generator (
         .clk(clk),
         .reset(reset),
