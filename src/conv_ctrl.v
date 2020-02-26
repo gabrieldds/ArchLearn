@@ -131,6 +131,7 @@ module conv_ctrl(
         .CONV_DIM_OUT(CONV_DIM_OUT),
         .CONV_DIM_KERNEL(CONV_DIM_KERNEL),
         .CONV_OUT_CH(CONV_OUT_CH),
+        .CONV_DIM_CH(CONV_DIM_CH),
         .STRIDE(STRIDE),
         .PADDING(PADDING)
     ) iter (

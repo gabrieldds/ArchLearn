@@ -21,16 +21,9 @@ module iterator(
 	parameter [`BYTE-1:0] CONV_DIM_OUT    = 32; //dimension of output img
 	parameter [`BYTE-1:0] CONV_DIM_KERNEL = 5;  //dimension of kernel mask
 	parameter [`BYTE-1:0] CONV_OUT_CH     = 32; //dimension of output channel
+	parameter [`BYTE-1:0] CONV_DIM_CH     = 3;
 	parameter [`BYTE-1:0] STRIDE          = 1;
 	parameter [`BYTE-1:0] PADDING         = 2;
-	
-	localparam [3:0] START = 0;
-	localparam [3:0] IINC  = 6;
-	localparam [3:0] JINC  = 5;
-	localparam [3:0] KINC  = 4;
-	localparam [3:0] LINC  = 3;
-	localparam [3:0] MINC  = 2;
-	localparam [3:0] NINC  = 1;
 	
 	input clk;
 	input en_ctrl;
@@ -53,8 +46,7 @@ module iterator(
 	assign in_row = (STRIDE * j) + m - PADDING;
 	assign in_col = (STRIDE * k) + n - PADDING;
 	assign cond   = en_ctrl & ~fin_r;
-	assign en_sum = (en_ctrl && (l < 2'd3) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
-	//assign en_save  = (j < 8'd2 && k < 8'd2) ? (n == 0 && m == 0) : (n == 0 && m == 0 && l == 0) ? 1 : 0;
+	assign en_sum = (en_ctrl && (l < CONV_DIM_CH) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
 
 	always @(j, k, l, m, n, en_save) begin
 		if (j < 8'd2 && m == 0 && n == 0) begin

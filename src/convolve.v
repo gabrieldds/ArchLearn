@@ -11,15 +11,16 @@ module convolve(
     convout
 );
 
+    parameter BIAS_SHIFT = 6;
+    parameter OUT_SHIFT  = 9;
+
     input  clk, reset, clken, s_convout, en_sat, en_mult_r;
     input  [7:0] signal, weight;
     input  [7:0] bias;
     output wire signed [7:0] convout;
 
     wire signed [17:0] adder_out;
-    reg signed  [17:0] r_bias;
     reg signed  [17:0] conv_temp;
-    reg save_r;
 
     sig_altmult_accum mac(
         .clk(clk),
@@ -32,7 +33,6 @@ module convolve(
     );
 
     reg signed [17:0] multa_r;
-    wire signed [17:0] multa_w;
 
     always @(posedge clk) begin
         if(en_mult_r) begin
@@ -46,12 +46,10 @@ module convolve(
 
     always @(posedge clk) begin
         if(reset) begin
-            r_bias    <= 0;
             conv_temp <= 0;
             multa_r   <= 0;
         end else if(en_sat) begin
-            r_bias <= $signed(bias) <<< 6;
-            conv_temp <= (adder_out + multa_r + ($signed(bias) <<< 6)) >>> 9;
+            conv_temp <= (adder_out + multa_r + ($signed(bias) <<< BIAS_SHIFT)) >>> OUT_SHIFT;
         end
     end
 
