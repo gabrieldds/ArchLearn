@@ -46,7 +46,7 @@ module iterator(
 	assign in_row = (STRIDE * j) + m - PADDING;
 	assign in_col = (STRIDE * k) + n - PADDING;
 	assign cond   = en_ctrl & ~fin_r;
-	assign en_sum = (en_ctrl && (l < CONV_DIM_CH) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1 : 0;
+	assign en_sum = (en_ctrl && (l < CONV_DIM_CH) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1'b1 : 1'b0;
 
 	always @(j, k, l, m, n, en_save) begin
 		if (j < 8'd2 && m == 0 && n == 0) begin

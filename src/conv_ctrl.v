@@ -10,7 +10,6 @@ module conv_ctrl(
     save_addr,
     en_sum,
     en_save,
-    en_read,
     en_write,
     s_convout,
     en_sat,
@@ -41,64 +40,19 @@ module conv_ctrl(
     output [`HALF_WORD-1:0] b_addr;
     output finish;
     output en_sum, en_save;
-    output reg en_read, en_write, en_mac, en_sat, s_convout, en_mult_r;
+    output reg en_write, en_mac, en_sat, s_convout, en_mult_r;
 
     wire [`BYTE-1:0] i, j, k, l, m, n;
     wire signed [`BYTE-1:0] in_row, in_col;
-    reg en_save_r, en_ctrl_r;
-    reg en_sum_r;
-    reg [2:0] state;
-
-    /*always @(posedge clk) begin
-        if (reset) begin
-            state <= 0;
-        end else begin
-            case(state)
-                START: begin
-                    if(en_ctrl) begin
-                        en_ctrl_r <= 1;
-                        state     <= ITERATING; 
-                    end else begin
-                        state <= START;
-                    end
-                end
-                ITERATING: begin
-                    if(en_save) begin
-                        en_ctrl_r <= 0;
-                        state     <= SAVE;
-                    end else if (finish) begin
-                        en_ctrl_r <= 0;
-                        state <= END;
-                    end else begin
-                        state <= ITERATING;
-                    end
-                end
-                SAVE: begin
-                    if(en_write) begin
-                        en_ctrl_r <= 1;
-                        state <= ITERATING;
-                    end else begin
-                        state <= SAVE;
-                    end
-                end
-                END: begin
-                    state <= START;
-                end
-            endcase
-        end
-    end*/
+    reg en_read;
 
     always @(posedge clk) begin
         if (reset) begin
             en_read   <= 0;
             en_write  <= 0;
-            en_save_r <= 0;
-            en_ctrl_r <= 0;
-            en_sum_r  <= 0;
             s_convout <= 0;
             en_mac    <= 0; 
             en_sat    <= 0;
-            en_mult_r <= 0;
         end else if (en_ctrl) begin
             en_read   <= en_sum;
             en_mac    <= en_read;
@@ -108,8 +62,10 @@ module conv_ctrl(
         end
     end
 
-    always @(j, k, m, n, en_mult_r) begin
-        if(j < 8'd2 && k < 8'd2) begin
+    always @(reset, j, k, m, n, en_mult_r) begin
+        if(reset) begin
+            en_mult_r <= 0;
+        end else if(j < 8'd2 && k < 8'd2) begin
             if(j == 0 && k == 0 && m == 0 && n == 0) begin
                 en_mult_r <= 1;
             end else begin

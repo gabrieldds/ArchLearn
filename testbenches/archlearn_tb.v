@@ -50,7 +50,7 @@ module archlearn_tb;
     wire [7:0]  bias, bias2, bias3, signal, signal2, signal3, weight, weight2, weight3;
     wire signed [7:0] convout, convout2, convout3;
     wire s_convout, s_convout2, s_convout3, en_save, en_save2, en_save3, finish, finish2, finish3, sload, sload2, sload3;  
-    wire en_sum, en_sum2, en_sum3, en_read, en_read2, en_read3, en_write, en_write2, en_write3;
+    wire en_sum, en_sum2, en_sum3, en_write, en_write2, en_write3;
     wire en_mac, en_mac2, en_mac3, en_sat, en_sat2, en_sat3, en_mult_r, en_mult_r2, en_mult_r3;
     reg clken, clken2, clken3;
 
@@ -103,7 +103,7 @@ module archlearn_tb;
         end
     end
 
-    conv_ctrl groundctrl (clk, reset, en_ctrl, s_addr, w_addr, b_addr, save_addr, en_sum, en_save, en_read, en_write, s_convout, en_sat, en_mac, en_mult_r, finish);
+    conv_ctrl groundctrl (clk, reset, en_ctrl, s_addr, w_addr, b_addr, save_addr, en_sum, en_save, en_write, s_convout, en_sat, en_mac, en_mult_r, finish);
     convolve conv(clk, reset, en_mac, en_write, en_sat, en_mult_r, bias, signal, weight, convout);
 
     conv_ctrl #(
@@ -125,7 +125,6 @@ module archlearn_tb;
         .save_addr(save_addr2),
         .en_sum(en_sum2),
         .en_save(en_save2),
-        .en_read(en_read2),
         .en_write(en_write2),
         .s_convout(s_convout2),
         .en_sat(en_sat2),
@@ -150,7 +149,6 @@ module archlearn_tb;
         .convout(convout2)
     );
 
-
     conv_ctrl #(
         .CONV_DIM_IMG(CONV_DIM_IMG3),
         .CONV_DIM_OUT(CONV_DIM_OUT3),
@@ -170,7 +168,6 @@ module archlearn_tb;
         .save_addr(save_addr3),
         .en_sum(en_sum3),
         .en_save(en_save3),
-        .en_read(en_read3),
         .en_write(en_write3),
         .s_convout(s_convout3),
         .en_sat(en_sat3),
@@ -200,10 +197,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`IMG1_DATA)
     ) input_mem (
         .clk(clk),
-        .address(s_addr),
+        .read_address(s_addr),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read),
         .data_out(signal)
     );
 
@@ -212,10 +209,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`IMG2_DATA)
     ) input_mem2 (
         .clk(clk),
-        .address(s_addr2),
+        .read_address(s_addr2),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read2),
         .data_out(signal2)
     );
 
@@ -224,10 +221,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`IMG3_DATA)
     ) input_mem3 (
         .clk(clk),
-        .address(s_addr3),
+        .read_address(s_addr3),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read3),
         .data_out(signal3)
     );
 
@@ -236,10 +233,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`CONV1_DATA)
     ) conv1_in_mem (
         .clk(clk),
-        .address(w_addr),
+        .read_address(w_addr),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read),
         .data_out(weight)
     );
 
@@ -248,10 +245,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`CONV2_DATA)
     ) conv1_in_mem2 (
         .clk(clk),
-        .address(w_addr2),
+        .read_address(w_addr2),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read2),
         .data_out(weight2)
     );
 
@@ -260,10 +257,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`CONV3_DATA)
     ) conv1_in_mem3 (
         .clk(clk),
-        .address(w_addr3),
+        .read_address(w_addr3),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(en_read3),
         .data_out(weight3)
     );
 
@@ -272,10 +269,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`BIAS1_DATA)
     ) bias_in_mem (
         .clk(clk),
-        .address(b_addr),
+        .read_address(b_addr),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(1'b1),
         .data_out(bias)
     );
 
@@ -284,10 +281,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`BIAS2_DATA)
     ) bias_in_mem2 (
         .clk(clk),
-        .address(b_addr2),
+        .read_address(b_addr2),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(1'b1),
         .data_out(bias2)
     );
 
@@ -296,10 +293,10 @@ module archlearn_tb;
         .MEM_INIT_FILE(`BIAS3_DATA)
     ) bias_in_mem3 (
         .clk(clk),
-        .address(b_addr3),
+        .read_address(b_addr3),
+        .write_address(),
         .data_in(8'bx),
         .write_enable(1'b0),
-        .read_enable(1'b1),
         .data_out(bias3)
     );
 
@@ -307,10 +304,10 @@ module archlearn_tb;
         .MEM_LENGTH(`CONV1OUT_LENGTH)
     ) conv1_out_mem (
         .clk(clk),
-        .address(save_addr),
+        .read_address(),
+        .write_address(save_addr),
         .data_in(convout),
         .write_enable(en_write),
-        .read_enable(1'b0),
         .data_out()
     );
 
@@ -318,10 +315,10 @@ module archlearn_tb;
         .MEM_LENGTH(`CONV2OUT_LENGTH)
     ) conv1_out_mem2 (
         .clk(clk),
-        .address(save_addr2),
+        .read_address(),
+        .write_address(save_addr2),
         .data_in(convout2),
         .write_enable(en_write2),
-        .read_enable(1'b0),
         .data_out()
     );
 
@@ -329,10 +326,10 @@ module archlearn_tb;
         .MEM_LENGTH(`CONV3OUT_LENGTH)
     ) conv1_out_mem3 (
         .clk(clk),
-        .address(save_addr3),
+        .read_address(),
+        .write_address(save_addr3),
         .data_in(convout3),
         .write_enable(en_write3),
-        .read_enable(1'b0),
         .data_out()
     );
 

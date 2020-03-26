@@ -81,7 +81,7 @@ module addr_generator(
             if (j == 0 && k == 0) begin
                 save_addr <= i_r1 + (((j_r1 * CONV_DIM_OUT) + (k_r1)) * CONV_OUT_CH);
             end else begin
-                save_addr <= i + (((j * CONV_DIM_OUT) + (k[KSIZE:0]-1)) * CONV_OUT_CH);
+                save_addr <= i + (((j * CONV_DIM_OUT) + (k[KSIZE:0]-1'b1)) * CONV_OUT_CH);
             end
         end
     end

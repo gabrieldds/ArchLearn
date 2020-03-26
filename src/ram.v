@@ -1,15 +1,15 @@
 module ram (
     input clk,
-    input [15:0] address,
+    input [15:0] read_address,
+    input [15:0] write_address,
     input [7:0] data_in, 
     input write_enable,
-    input read_enable,
     output reg [7:0] data_out
 );
     parameter MEM_LENGTH = 255;
     parameter MEM_INIT_FILE = "";
 
-    reg [7:0] memory [0:MEM_LENGTH];
+    reg [7:0] memory [0:MEM_LENGTH-1];
 
     initial begin
         if (MEM_INIT_FILE != "") begin
@@ -19,12 +19,9 @@ module ram (
 
     always @(posedge clk) begin
         if (write_enable) begin
-            memory[address] <= data_in;
+            memory[write_address] <= data_in;
         end
-
-        if(read_enable) begin
-            data_out <= memory[address];
-        end
+        data_out <= memory[read_address];
     end
 
 endmodule

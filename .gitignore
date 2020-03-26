@@ -2,3 +2,5 @@
 /synthesis
 /testbenches/transcript
 /src/*.bak
+/testbenches/*.bak
+arch.code-workspace
