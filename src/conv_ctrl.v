@@ -40,19 +40,24 @@ module conv_ctrl(
     output [`HALF_WORD-1:0] b_addr;
     output finish;
     output en_sum, en_save;
-    output reg en_write, en_mac, en_sat, s_convout, en_mult_r;
+    output en_mult_r;
+    output reg en_write, en_mac, en_sat, s_convout;
 
     wire [`BYTE-1:0] i, j, k, l, m, n;
     wire signed [`BYTE-1:0] in_row, in_col;
     reg en_read;
 
+    assign en_mult_r = (k >= 8'd2 || j == 8'd2) ? 1'b1 
+                     : (k == 8'd1 || j == 8'd1) ? 1'b0 
+                     : (m > 8'd0  || n > 8'd0) ? 1'b0 : 1'b1; 
+
     always @(posedge clk) begin
         if (reset) begin
-            en_read   <= 0;
-            en_write  <= 0;
-            s_convout <= 0;
-            en_mac    <= 0; 
-            en_sat    <= 0;
+            en_read   <= 1'b0;
+            en_write  <= 1'b0;
+            s_convout <= 1'b0;
+            en_mac    <= 1'b0; 
+            en_sat    <= 1'b0;
         end else if (en_ctrl) begin
             en_read   <= en_sum;
             en_mac    <= en_read;
@@ -62,7 +67,7 @@ module conv_ctrl(
         end
     end
 
-    always @(reset, j, k, m, n, en_mult_r) begin
+    /*always @(reset, j, k, m, n, en_mult_r) begin
         if(reset) begin
             en_mult_r <= 0;
         end else if(j < 8'd2 && k < 8'd2) begin
@@ -80,7 +85,7 @@ module conv_ctrl(
         end else begin
             en_mult_r <= 1;
         end
-    end
+    end*/
 
     iterator #(
         .CONV_DIM_IMG(CONV_DIM_IMG),

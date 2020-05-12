@@ -30,14 +30,14 @@ module iterator(
 	input reset;
 
 	output en_sum;
-	output reg en_save;
+	output en_save;
 	output reg fin_r;
-	output reg [`BYTE-1:0] i; //counter_convout;
-	output reg [`BYTE-1:0] j; //counter_img_dimX;
-	output reg [`BYTE-1:0] k; //counter_img_dimY;
-	output reg [`BYTE-1:0] m; //counter_kernel_dimX;
-	output reg [`BYTE-1:0] n; //counter_kernel_dimY;
-	output reg [`BYTE-1:0] l; //counter_kernel_dimY;
+	output reg [`BYTE-1:0] i;
+	output reg [`BYTE-1:0] j; 
+	output reg [`BYTE-1:0] k; 
+	output reg [`BYTE-1:0] m; 
+	output reg [`BYTE-1:0] n; 
+	output reg [`BYTE-1:0] l; 
 	output signed [`BYTE-1:0]  in_row, in_col;
 
 	reg fin, finish;
@@ -47,8 +47,9 @@ module iterator(
 	assign in_col = (STRIDE * k) + n - PADDING;
 	assign cond   = en_ctrl & ~fin_r;
 	assign en_sum = (en_ctrl && (l < CONV_DIM_CH) && (in_row >= 8'd0 && in_col >= 8'd0 && in_row < CONV_DIM_IMG && in_col < CONV_DIM_IMG)) ? 1'b1 : 1'b0;
-
-	always @(j, k, l, m, n, en_save) begin
+	assign en_save = (m > 8'd0 || n > 8'd0) ? 1'b0 : (j < 8'd2) ? 1'd1 : (l == 8'd0) ? 1'd1 : 1'b0; 
+	
+	/*always @(j, k, l, m, n, en_save) begin
 		if (j < 8'd2 && m == 0 && n == 0) begin
 			en_save <= 1;
 		end else if(j >= 8'd2 && m == 0 && n == 0 && l == 0) begin
@@ -56,7 +57,7 @@ module iterator(
 		end else begin
 			en_save <= 0;
 		end
-	end
+	end*/
 
 	always @(posedge clk) begin
 		if(reset) begin
@@ -69,7 +70,7 @@ module iterator(
 	end
 	
 	always @(posedge clk) begin
-		if (reset) begin
+		if(reset) begin
 			i <= 0;
 			j <= 0;
 			k <= 0;

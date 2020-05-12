@@ -36,19 +36,19 @@ module convolve(
 
     always @(posedge clk) begin
         if(reset) begin
-            multa_r <= 0;
+            multa_r <= 18'b0;
         end else if(en_mult_r) begin
             if (clken && s_convout) begin
                 multa_r <= $signed(signal) * $signed(weight);
             end
         end else begin
-            multa_r <= 0;
+            multa_r <= 18'b0;
         end
     end
 
     always @(posedge clk) begin
         if(reset) begin
-            conv_temp <= 0;
+            conv_temp <= 18'b0;
         end else if(en_sat) begin
             conv_temp <= (adder_out + multa_r + ($signed(bias) <<< BIAS_SHIFT)) >>> OUT_SHIFT;
         end

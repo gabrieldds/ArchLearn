@@ -23,7 +23,8 @@ module controller(
     addr,
     en_wmem,
     en_rmem,
-    en_conv
+    en_conv,
+    state_out
 );
     /*declare parameters*/
     localparam MSB_BYTE = 8;
@@ -39,31 +40,32 @@ module controller(
     localparam CONV           = 4'b0101;
     localparam WAIT2IDLE      = 4'b0110;
     localparam WAITC          = 4'b0111;
-    localparam WAITREADY      = 4'b1000;
     /*declare input, output paremeters*/
     input clk;
     input reset;
     input [7:0] data_in, stsinkdata;
     input stsinkvalid, stsourceready;
-    input [2:0] convin;
+    input convin;
     output reg stsinkready;
     output reg stsourcevalid;
     output reg [7:0] data_out, stsourcedata;
     output reg [15:0] addr;
     output reg [8:0]  en_wmem;
     output reg [2:0]  en_rmem;
-    output reg [2:0]  en_conv; 
+    output reg [2:0]  en_conv;
+    output reg [FSM_TAM-1:0] state_out;
     /***********************internal registers***********************/
     reg [15:0] waddr1, waddr2, waddr3, waddr4, waddr5, waddr6, waddr7, waddr8, waddr9;
     reg [15:0] raddr1, raddr2, raddr3;
     reg [FSM_TAM-1:0] state;
     reg [3:0] wen;
-    reg [2:0] ren;
-    reg [2:0] conven;
+    reg [1:0] ren;
+    reg [1:0] conven;
     reg read;
 
     always @(posedge clk) begin
         stsinkready <= stsourceready;
+        state_out <= state;
     end
 
     always @(posedge clk) begin
@@ -84,8 +86,8 @@ module controller(
             raddr3 <= 16'b0;
             addr <= 16'b0;
             wen <= 4'b0;
-            ren <= 3'b0;
-            conven <= 3'b0;
+            ren <= 2'b0;
+            conven <= 2'b0;
             en_wmem <= 9'b0;
             en_rmem <= 3'b0;
             en_conv <= 3'b0;
@@ -100,10 +102,7 @@ module controller(
                     addr <= 16'b0;
                     read <= 1'b0;
 					stsourcevalid <= 1'b0;
-                    /*if(read) begin
-                        read <= 1'b0;
-					    stsourcevalid <= 1'b1;
-                    end */
+                    en_conv <= 3'b0;
                     if(stsinkvalid) begin
                         case(stsinkdata[7:4])
                             4'h1: begin
@@ -112,11 +111,11 @@ module controller(
                             end
                             4'h2: begin
                                 state <= WAITDEASSERT2;
-                                ren <= stsinkdata[2:0];
+                                ren <= stsinkdata[1:0];
                             end
                             4'h3: begin
                                 state  <= WAITDEASSERT3;
-                                conven <= stsinkdata[2:0];
+                                conven <= stsinkdata[1:0];
                             end
                         endcase
                     end
@@ -195,20 +194,26 @@ module controller(
                 READ: begin
                     if (stsinkvalid) begin
                         state <= WAIT2IDLE;
-                        stsourcevalid <= 1'b1;
-                        read <= 1'b1;
-                        if(ren == 3'b001) begin
+                        if(ren == 2'b00) begin
+                            stsourcevalid <= 1'b1;
+                            read <= 1'b1;
                             raddr1 <= raddr1 + 1'b1;
                             addr   <= raddr1;
                             en_rmem[0] <= 1'b1;
-                        end else if(ren == 3'b010) begin
+                        end else if(ren == 2'b01) begin
+                            stsourcevalid <= 1'b1;
+                            read <= 1'b1;
                             raddr2 <= raddr2 + 1'b1;
                             addr   <= raddr2;
                             en_rmem[1] <= 1'b1;
-                        end else if(ren == 3'b100) begin
+                        end else if(ren == 2'b10) begin
+                            stsourcevalid <= 1'b1;
+                            read <= 1'b1;
                             raddr3 <= raddr3 + 1'b1;
                             addr   <= raddr3;
                             en_rmem[2] <= 1'b1;
+                        end else begin
+                            en_rmem <= 3'b0;
                         end
                     end else begin
                         state <= READ;
@@ -225,20 +230,30 @@ module controller(
                     end
                 end
                 CONV: begin
-                    en_conv <= conven;
-                    state   <= WAITC;
+                    if(stsinkvalid) begin
+						      state   <= WAITC;
+                        if(conven == 2'b00) begin
+                            en_conv[0] <= 1'b1;
+                        end else if(conven == 2'b01) begin
+                            en_conv[1] <= 1'b1;
+                        end else if(conven == 2'b10) begin
+                            en_conv[2] <= 1'b1;
+                        end else begin
+                            en_conv <= 3'b0;
+                        end
+						  end else begin
+						      state <= CONV;
+						  end
                 end
                 WAITC: begin
-                    if ((convin[0] == 1'b1 && en_conv[0] == 1'b1) || (convin[1] == 1'b1 && en_conv[1] == 1'b1) || (convin[2] == 1'b1 && en_conv[2] == 1'b1)) begin
-                        state    <= IDLE;
-                        en_conv  <= 3'b0;
-                        conven   <= 3'b0;
-                        stsourcevalid <= 1'b1;
-                        stsourcedata <= 8'hfe;
+                    if (convin) begin
+                        state <= IDLE;
+								conven <= 2'b0;
                     end else begin
                         state <= WAITC;
                     end
                 end
+					 
                 default: begin 
                     state <= IDLE;
                 end

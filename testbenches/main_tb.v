@@ -2,16 +2,16 @@
 `define IMG1_DATA          "C:/Users/gabri/Documents/Projetos/addr_read.mem"
 `define INTRUCTIONS        "C:/Users/gabri/Documents/Projetos/commands_read.mem"
 
-`timescale 1 ps / 1 ps
+`timescale 1 ns / 1 ns
 module main_tb;
 
     reg clk, reset, clock, sclk, mosi, nss;
     wire miso;
 
     localparam CLK_PERIOD = 20;
-    localparam period2 = 88;
+    localparam period2 = 100;
     always #(CLK_PERIOD/2) clk=~clk;
-    always #(88/2) sclk=~sclk;
+    always #(period2/2) sclk=~sclk;
 
     task run_clock;
     begin
@@ -26,498 +26,38 @@ module main_tb;
         #(period2/2) clock = ~clock; 
     end
     endtask
-
-	/*ram #(
-        .MEM_LENGTH(`INPUT1_LENGTH),
-        .MEM_INIT_FILE(`INTRUCTIONS)
-	) input_instruction (
-        .clk(clk),
-        .read_address(),
-        .write_address(),
-        .data_in(8'bx),
-        .write_enable(1'b0),
-        .data_out(inst)
-    );
-
-	ram #(
-        .MEM_LENGTH(`INPUT1_LENGTH),
-        .MEM_INIT_FILE(`IMG1_DATA)
-    ) input_mem (
-        .clk(clk),
-        .read_address(pc_addr),
-        .write_address(),
-        .data_in(8'bx),
-        .write_enable(1'b0),
-        .data_out(signal)
-    );*/
 	
     initial begin
-		#1 clk <= 0; clock <= 0; reset <= 0; sclk <= 0;
+		#1 clk <= 0; clock <= 0; reset <= 0; sclk <= 0; nss <= 1;
 		run_clock2;
-		reset = 1;
+		reset <= 1;
 		run_clock2;
-		reset = 0;
 		run_clock2;
-		nss = 1;
+		reset <= 0;
+		run_clock2;
+		run_clock2;
+		nss = 0;
+		#50 mosi = 0;
+		run_clock2;
+		mosi = 0;
+		run_clock2;
+		mosi = 1;
+		run_clock2;
+		mosi = 1;
+		run_clock2;
+		mosi = 0;
+		run_clock2;
+		mosi = 0;
+		run_clock2;
+		mosi = 0;
+		run_clock2;
+		mosi = 0;
+		#50 nss = 1;
 		run_clock2;
 		
 		nss = 0;
-		#44 mosi = 0;
+		#50 mosi = 1;
 		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 1;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 0;
-		run_clock2;
-		mosi = 1;
-		#44 nss = 1;
-		run_clock2;
-		
-		nss = 0;
-		#44 mosi = 1;
-		run_clock2;
 		mosi = 1;
 		run_clock2;
 		mosi = 1;
@@ -531,19 +71,21 @@ module main_tb;
 		mosi = 1;
 		run_clock2;
 		mosi = 1;
-		#44 nss = 1;
-
-		//$stop;
+		#50 nss = 1;
     end
 
 	wire convout;
 	always @(posedge clk ) begin
-		if(convout) begin
+		if(convout == 1'b1) begin
 			$stop;
 		end
 	end
 
-    archlearn main(clk, mosi, miso, nss, sclk, reset, convout);
+	wire [0:6] hex0, hex4, hex5, hex6, hex7;
+	wire [17:0] ledr;
+	wire [6:0] ledg;
+
+    archlearn main(clk, mosi, miso, nss, sclk, reset, hex0, hex4, hex5, hex6, hex7, ledr, ledg, convout);
     
 
 endmodule
